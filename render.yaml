@@ -1,0 +1,7 @@
+services:
+  - type: cron
+    name: car-valuation-bot
+    runtime: python-3.11
+    buildCommand: pip install -r requirements.txt
+    startCommand: python car_bot.py
+    schedule: "0 8 * * *"
