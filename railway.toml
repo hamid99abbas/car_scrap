@@ -1,8 +1,7 @@
 [build]
-  builder = "nixpacks"
+builder = "DOCKERFILE"
 
-[nixpacks]
-  pkgs = [
-    "google-chrome-stable",
-    "chromedriver"
-  ]
+[deploy]
+startCommand = "python scrap_all.py"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
