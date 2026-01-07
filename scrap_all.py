@@ -15,9 +15,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+# from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import TimeoutException
-from webdriver_manager.chrome import ChromeDriverManager
+# from webdriver_manager.chrome import ChromeDriverManager
 import logging
 from datetime import datetime
 import sys
@@ -289,7 +289,7 @@ class CarValuationBot:
         seen_titles = set()
 
         try:
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+            driver = webdriver.Chrome(options=chrome_options)
 
             logger.info("Loading AutoTrader page...")
             driver.get(url)
@@ -1051,7 +1051,7 @@ def main():
     AUTOTRADER_URL = 'https://www.autotrader.co.uk/car-search?advertising-location=at_cars&channel=cars&homeDeliveryAdverts=include&maximum-mileage=150000&minimum-mileage=100000&postcode=M329AU&radius=50&sort=relevance&year-to=2026'
     POSTCODE = "M32 9AU"
     MAX_CARS_PER_SITE = 15
-    HEADLESS = False  # Change to True for production/server deployment
+    HEADLESS = True  # Change to True for production/server deployment
 
     # Email configuration - FROM ENVIRONMENT VARIABLES
     SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'your-email@gmail.com')
