@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 class EmailReporter:
     """Handle email sending"""
-
+    
     def __init__(self, sender_email, sender_password, smtp_server='smtp.gmail.com', smtp_port=587):
         """
         Initialize email reporter
@@ -63,25 +63,25 @@ class EmailReporter:
         self.sender_password = sender_password
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
-
-    def send_report(self, recipient_email, results, json_file='car_valuations_results.json',
-                    csv_file='car_valuations_results.csv'):
+    
+    def send_report(self, recipient_email, results, json_file='car_valuations_results.json', 
+                   csv_file='car_valuations_results.csv'):
         """Send email report with attachments"""
         try:
             logger.info("\n" + "=" * 70)
             logger.info("SENDING EMAIL REPORT")
             logger.info("=" * 70)
-
+            
             # Create message
             msg = MIMEMultipart()
             msg['From'] = self.sender_email
             msg['To'] = recipient_email
             msg['Subject'] = f"🚗 Car Valuation Report - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-
+            
             # Generate HTML body
             html_body = self._generate_html_report(results)
             msg.attach(MIMEText(html_body, 'html'))
-
+            
             # Attach JSON file
             try:
                 with open(json_file, 'rb') as attachment:
@@ -93,7 +93,7 @@ class EmailReporter:
                     logger.info(f"✓ Attached {json_file}")
             except FileNotFoundError:
                 logger.warning(f"⚠ {json_file} not found, skipping attachment")
-
+            
             # Attach CSV file
             try:
                 with open(csv_file, 'rb') as attachment:
@@ -105,37 +105,37 @@ class EmailReporter:
                     logger.info(f"✓ Attached {csv_file}")
             except FileNotFoundError:
                 logger.warning(f"⚠ {csv_file} not found, skipping attachment")
-
+            
             # Send email
             logger.info(f"Sending to {recipient_email}...")
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()
                 server.login(self.sender_email, self.sender_password)
                 server.send_message(msg)
-
+            
             logger.info(f"✓ Email sent successfully to {recipient_email}")
             logger.info("=" * 70)
             return True
-
+            
         except Exception as e:
             logger.error(f"✗ Error sending email: {e}")
             logger.info("=" * 70)
             return False
-
+    
     def _generate_html_report(self, results):
         """Generate HTML email report"""
         total = len(results)
         plates_detected = sum(1 for c in results if c.get('detected_plate') != "Not detected")
-        valuations = sum(1 for c in results if c.get('webuyanycar_valuation')
-                         not in ["Failed", "Error", "No plate/mileage", "No plate or mileage"])
-
+        valuations = sum(1 for c in results if c.get('webuyanycar_valuation') 
+                        not in ["Failed", "Error", "No plate/mileage", "No plate or mileage"])
+        
         source_counts = {}
         for car in results:
             source = car.get('source', 'Unknown')
             source_counts[source] = source_counts.get(source, 0) + 1
-
+        
         source_html = "".join([f"<li>{src}: {count}</li>" for src, count in source_counts.items()])
-
+        
         cars_html = ""
         for i, car in enumerate(results[:20], 1):
             link = car.get('link', '#')
@@ -152,7 +152,7 @@ class EmailReporter:
                 <td>{link_html}</td>
             </tr>
             """
-
+        
         html = f"""
         <html>
         <head>
@@ -174,7 +174,7 @@ class EmailReporter:
                 <h1>🚗 Car Valuation Report</h1>
                 <p>Report generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
             </div>
-
+            
             <div class="summary">
                 <h2>Summary</h2>
                 <div class="stats">
@@ -191,11 +191,11 @@ class EmailReporter:
                         <p>Valuations Obtained</p>
                     </div>
                 </div>
-
+                
                 <h3>By Source</h3>
                 <ul>{source_html}</ul>
             </div>
-
+            
             <h2>Top Results (showing {min(20, total)} of {total})</h2>
             <table>
                 <tr>
@@ -210,7 +210,7 @@ class EmailReporter:
                 </tr>
                 {cars_html}
             </table>
-
+            
             <div class="footer">
                 <p>Full detailed results attached as JSON and CSV files</p>
                 <p>For questions or issues, check the log file: car_valuation_bot.log</p>
@@ -218,7 +218,7 @@ class EmailReporter:
         </body>
         </html>
         """
-
+        
         return html
 
 
@@ -247,10 +247,10 @@ class CarValuationBot:
                     try:
                         src = img.get_attribute(attr)
                         if (src and
-                                src.startswith('http') and
-                                'placeholder' not in src.lower() and
-                                'logo' not in src.lower() and
-                                'icon' not in src.lower()):
+                            src.startswith('http') and
+                            'placeholder' not in src.lower() and
+                            'logo' not in src.lower() and
+                            'icon' not in src.lower()):
                             images.append(src)
                             break
                     except:
@@ -309,17 +309,17 @@ class CarValuationBot:
 
             logger.info("Scrolling to load listings...")
             last_count = 0
-            for i in range(15):
+            for i in range(10):  # REDUCED from 15 to 10 scrolls
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(2)
+                time.sleep(1.5)  # REDUCED from 2 to 1.5 seconds
 
                 current_listings = driver.find_elements(By.CSS_SELECTOR, "li[data-advert-id], article")
                 current_count = len(current_listings)
 
                 if i % 3 == 0:
-                    logger.info(f"Scroll {i + 1}/15... (found {current_count} elements)")
+                    logger.info(f"Scroll {i + 1}/10... (found {current_count} elements)")
 
-                if current_count == last_count and i > 5:
+                if current_count == last_count and i > 3:  # REDUCED from i > 5
                     logger.info(f"✓ All content loaded at scroll {i + 1}")
                     break
 
@@ -358,8 +358,8 @@ class CarValuationBot:
                 for elem in articles + sections:
                     text = elem.text.lower()
                     if ('£' in elem.text and
-                            any(word in text for word in ['miles', 'manual', 'automatic', 'petrol', 'diesel']) and
-                            not any(word in text for word in ['make and model', 'postcode', 'search radius'])):
+                        any(word in text for word in ['miles', 'manual', 'automatic', 'petrol', 'diesel']) and
+                        not any(word in text for word in ['make and model', 'postcode', 'search radius'])):
                         potential_listings.append(elem)
 
                 if len(potential_listings) > len(listings):
@@ -471,6 +471,9 @@ class CarValuationBot:
                     driver.quit()
                 except:
                     pass
+            # Force garbage collection to free memory
+            import gc
+            gc.collect()
 
         logger.info(f"\n✓ Successfully scraped {len(cars)} cars from AutoTrader\n")
         return cars
@@ -519,8 +522,7 @@ class CarValuationBot:
 
                 price_elem = listing.find(string=re.compile('£')) or listing.find(class_=re.compile('price'))
                 if price_elem:
-                    car['price'] = price_elem.get_text(strip=True) if hasattr(price_elem, 'get_text') else str(
-                        price_elem).strip()
+                    car['price'] = price_elem.get_text(strip=True) if hasattr(price_elem, 'get_text') else str(price_elem).strip()
 
                 images = []
                 for img in listing.find_all('img'):
@@ -590,7 +592,7 @@ class CarValuationBot:
                     return None
 
                 text = parsed_text.upper().replace('\n', ' ').replace('\r', ' ')
-
+                
                 # UK Plate Patterns (comprehensive)
                 patterns = [
                     # Modern UK (2001+): AB12 CDE
@@ -608,7 +610,7 @@ class CarValuationBot:
                 ]
 
                 plates_found = []
-
+                
                 for pattern in patterns:
                     matches = re.findall(pattern, text)
                     for match in matches:
@@ -625,7 +627,7 @@ class CarValuationBot:
                     if plate not in seen:
                         unique_plates.append(plate)
                         seen.add(plate)
-
+                
                 if unique_plates:
                     # Return the first valid plate found
                     return unique_plates[0]
@@ -634,7 +636,7 @@ class CarValuationBot:
                 if attempt < max_retries - 1:
                     time.sleep(1)
                     continue
-
+                    
                 return None
 
             except Exception as e:
@@ -677,7 +679,7 @@ class CarValuationBot:
             try:
                 cookie_btn = WebDriverWait(driver, 5).until(
                     EC.element_to_be_clickable((By.XPATH,
-                                                "//button[contains(text(), 'Allow all cookies')]"))
+                        "//button[contains(text(), 'Allow all cookies')]"))
                 )
                 cookie_btn.click()
                 time.sleep(1)
@@ -689,8 +691,8 @@ class CarValuationBot:
             if not cookie_accepted:
                 try:
                     cookie_btn = driver.find_element(By.XPATH,
-                                                     "//button[contains(translate(text(), 'ACCEPT', 'accept'), 'accept') or "
-                                                     "contains(translate(text(), 'ALLOW', 'allow'), 'allow')]")
+                        "//button[contains(translate(text(), 'ACCEPT', 'accept'), 'accept') or "
+                        "contains(translate(text(), 'ALLOW', 'allow'), 'allow')]")
                     if cookie_btn.is_displayed():
                         cookie_btn.click()
                         time.sleep(1)
@@ -709,8 +711,7 @@ class CarValuationBot:
                 try:
                     reg_input = wait.until(EC.presence_of_element_located((By.NAME, "vehicleReg")))
                 except:
-                    reg_input = wait.until(
-                        EC.presence_of_element_located((By.XPATH, "//input[@placeholder='e.g. AB12 CDE']")))
+                    reg_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[@placeholder='e.g. AB12 CDE']")))
 
             reg_input.clear()
             reg_input.send_keys(registration)
@@ -730,8 +731,7 @@ class CarValuationBot:
             time.sleep(0.5)
 
             logger.info("    Submitting form...")
-            submit_btn = wait.until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Get my car valuation')]")))
+            submit_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Get my car valuation')]")))
             driver.execute_script("arguments[0].scrollIntoView(true);", submit_btn)
             time.sleep(0.5)
 
@@ -756,7 +756,7 @@ class CarValuationBot:
                 try:
                     cookie_btn = WebDriverWait(driver, 3).until(
                         EC.element_to_be_clickable((By.XPATH,
-                                                    "//button[contains(text(), 'Allow all cookies')]"))
+                            "//button[contains(text(), 'Allow all cookies')]"))
                     )
                     cookie_btn.click()
                     time.sleep(1)
@@ -768,8 +768,8 @@ class CarValuationBot:
                 if not cookie_accepted:
                     try:
                         cookie_btn = driver.find_element(By.XPATH,
-                                                         "//button[contains(translate(text(), 'ACCEPT', 'accept'), 'accept') or "
-                                                         "contains(translate(text(), 'ALLOW', 'allow'), 'allow')]")
+                            "//button[contains(translate(text(), 'ACCEPT', 'accept'), 'accept') or "
+                            "contains(translate(text(), 'ALLOW', 'allow'), 'allow')]")
                         if cookie_btn.is_displayed():
                             cookie_btn.click()
                             time.sleep(1)
@@ -799,7 +799,7 @@ class CarValuationBot:
 
             try:
                 postcode_input = driver.find_element(By.XPATH,
-                                                     "//input[contains(@placeholder, 'M71') or contains(@placeholder, 'postcode')]")
+                    "//input[contains(@placeholder, 'M71') or contains(@placeholder, 'postcode')]")
                 driver.execute_script("arguments[0].scrollIntoView(true);", postcode_input)
                 time.sleep(0.3)
                 postcode_input.click()
@@ -857,8 +857,7 @@ class CarValuationBot:
             buttons = driver.find_elements(By.TAG_NAME, "button")
             for btn in buttons:
                 btn_text = btn.text.strip()
-                if (
-                        'Get my valuation' in btn_text or 'Get valuation' in btn_text) and btn.is_displayed() and btn.is_enabled():
+                if ('Get my valuation' in btn_text or 'Get valuation' in btn_text) and btn.is_displayed() and btn.is_enabled():
                     valuation_btn = btn
                     logger.info(f"    ✓ Found: '{btn_text}'")
                     break
@@ -994,7 +993,7 @@ class CarValuationBot:
             'sources': {},
             'plates_detected': sum(1 for c in self.results if c.get('detected_plate') != "Not detected"),
             'valuations_obtained': sum(1 for c in self.results if c.get('webuyanycar_valuation')
-                                       not in ["Failed", "Error", "No plate/mileage", "No plate or mileage"]),
+                                     not in ["Failed", "Error", "No plate/mileage", "No plate or mileage"]),
             'cars': self.results
         }
 
@@ -1054,9 +1053,9 @@ def main():
     HEADLESS = False  # Change to True for production/server deployment
 
     # Email configuration - FROM ENVIRONMENT VARIABLES
-    SENDER_EMAIL = os.getenv('SENDER_EMAIL')
-    SENDER_PASSWORD = os.getenv('SENDER_PASSWORD')
-    RECIPIENT_EMAIL = os.getenv('RECIPIENT_EMAIL')
+    SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'your-email@gmail.com')
+    SENDER_PASSWORD = os.getenv('SENDER_PASSWORD', 'xxxx xxxx xxxx xxxx')
+    RECIPIENT_EMAIL = os.getenv('RECIPIENT_EMAIL', 'your-email@gmail.com')
 
     # Initialize bot and email
     bot = CarValuationBot(headless=HEADLESS)
@@ -1072,7 +1071,7 @@ def main():
     )
     bot.save_to_csv()
     email_reporter.send_report(RECIPIENT_EMAIL, results)
-
+    
     logger.info("\n✓ Bot execution completed!")
 
 
