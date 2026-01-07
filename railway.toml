@@ -1,0 +1,8 @@
+[build]
+  builder = "nixpacks"
+
+[nixpacks]
+  pkgs = [
+    "google-chrome-stable",
+    "chromedriver"
+  ]

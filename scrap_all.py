@@ -17,7 +17,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import TimeoutException
-from webdriver_manager.chrome import ChromeDriverManager
 import logging
 from datetime import datetime
 import sys
@@ -274,9 +273,10 @@ class CarValuationBot:
 
         chrome_options = Options()
         if self.headless:
-            chrome_options.add_argument('--headless=new')  # NEW headless mode - much better!
+            chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.binary_location = '/usr/bin/google-chrome'
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
@@ -289,7 +289,7 @@ class CarValuationBot:
         seen_titles = set()
 
         try:
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+            driver = webdriver.Chrome(options=chrome_options)
 
             logger.info("Loading AutoTrader page...")
             driver.get(url)
@@ -652,9 +652,10 @@ class CarValuationBot:
 
         chrome_options = Options()
         if self.headless:
-            chrome_options.add_argument("--headless=new")  # NEW headless mode - better for servers!
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.binary_location = '/usr/bin/google-chrome'
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_argument("--window-size=1920,1080")
@@ -663,7 +664,7 @@ class CarValuationBot:
         driver = None
 
         try:
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+            driver = webdriver.Chrome(options=chrome_options)
             driver.set_page_load_timeout(30)
             wait = WebDriverWait(driver, 20)
 
@@ -1051,7 +1052,7 @@ def main():
     AUTOTRADER_URL = 'https://www.autotrader.co.uk/car-search?advertising-location=at_cars&channel=cars&homeDeliveryAdverts=include&maximum-mileage=150000&minimum-mileage=100000&postcode=M329AU&radius=50&sort=relevance&year-to=2026'
     POSTCODE = "M32 9AU"
     MAX_CARS_PER_SITE = 15
-    HEADLESS = False  # Change to True for production/server deployment
+    HEADLESS = True  # Change to True for production/server deployment
 
     # Email configuration - FROM ENVIRONMENT VARIABLES
     SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'your-email@gmail.com')
