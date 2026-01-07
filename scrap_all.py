@@ -1054,9 +1054,9 @@ def main():
     HEADLESS = False  # Change to True for production/server deployment
 
     # Email configuration - FROM ENVIRONMENT VARIABLES
-    SENDER_EMAIL = "hamidatabbass@gmail.com"  # Change this
-    SENDER_PASSWORD = "ryyi gice ifvw itcc"  # 16-char Gmail app password
-    RECIPIENT_EMAIL = "hamidatabbas@gmail.com"  # Change this
+    SENDER_EMAIL = os.getenv('SENDER_EMAIL')
+    SENDER_PASSWORD = os.getenv('SENDER_PASSWORD')
+    RECIPIENT_EMAIL = os.getenv('RECIPIENT_EMAIL')
 
     # Initialize bot and email
     bot = CarValuationBot(headless=HEADLESS)
